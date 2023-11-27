@@ -149,7 +149,7 @@ sd(random_100)
 
 # Assignment 2                          ####
 set.seed(1234567890)
-max_it <- 100 # max number of EM iterations
+max_it <- 500 # max number of EM iterations (increased from 100)
 min_change <- 0.1 # min change in log lik between two consecutive iterations
 n=1000 # number of training points
 D=10 # number of dimensions
@@ -185,72 +185,82 @@ pi <- pi / sum(pi)
 for(m in 1:M) {
   mu[m,] <- runif(D,0.49,0.51)
 }
+for(it in 1:max_it) {
+  plot(mu[1,], type="o", col="blue", ylim=c(0,1))
+  points(mu[2,], type="o", col="red")
+  points(mu[3,], type="o", col="green")
+  #points(mu[4,], type="o", col="yellow")
+  Sys.sleep(0.1) # Decreased from 0.5
+  # E-step: Computation of the  weights
+  # Calculates the weights for each observation
+  for(iter in 1:1000){
+    x_d <- x[iter, ]
+    
+    # Bernolli for (x1 given mu_1), (x1 given mu_2), (x1 given mu_3)
+    bern_mu1 <- prod(mu[1,]^x_d * (1 - mu[1, ])^(1-x_d))
+    bern_mu2 <- prod(mu[2,]^x_d * (1 - mu[2, ])^(1-x_d))
+    bern_mu3 <- prod(mu[3,]^x_d * (1 - mu[3, ])^(1-x_d))
+    
+    # Probabilities that the observation belongs to each distribution
+    prob_1 <- pi[1] * bern_mu1 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+    prob_2 <- pi[2] * bern_mu2 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+    prob_3 <- pi[3] * bern_mu3 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+    
+    # Probability that observation 1 comes from each distribution
+    w[iter, ] <- c(prob_1, prob_2, prob_3) 
+  }
+  #Log likelihood computation.
+  llik[it] <- sum(log(w))
+  cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
+  flush.console()
+  # Stop if the lok likelihood has not changed significantly
+  # Your code here
+  # M-step: ML parameter estimation from the data and weights
+  # Calculate new pi
+  pi <- 1/1000 * colSums(w)
+  # Calculates new mu
+  mu[1,] <- 1/sum(w[,1]) * colSums(w[,1] * x)
+  mu[2,] <- 1/sum(w[,2]) * colSums(w[,2] * x)
+  mu[3,] <- 1/sum(w[,3]) * colSums(w[,3] * x)
+}
 pi
 mu
+plot(llik[1:it], type="o")
+# Algorithm should have stopped around 350.
 
-mu
-x[1, ]
-  
-x_d <- x[1,]
-x_d
-mu[1, ]
-
-mu[1,]^x_d * (1 - mu[1, ])^(1-x_d)
-
-bern_mu1 <- prod(mu[1,]^x_d * (1 - mu[1, ])^(1-x_d))
+# true_mu[1,] is our mu[3,] 
+# true_mu[2,] is our mu[1,]
+# true_mu[3,] is our mu[2,]
 
 
-bern_mu2 <- prod(mu[2,]^x_d * (1 - mu[2, ])^(1-x_d))
-bern_mu3 <- prod(mu[3,]^x_d * (1 - mu[3, ])^(1-x_d))
 
 
+# Our own implementation algorithm      ####
 # Calculates the weights for each observation
 for(iter in 1:1000){
   x_d <- x[iter, ]
   
-  # bernolli for (x1 given mu_1), (x1 given mu_2), (x1 given mu_3)
+  # Bernolli for (x_iter|mu_1), (x_iter|mu_2), (x_iter|mu_3)
   bern_mu1 <- prod(mu[1,]^x_d * (1 - mu[1, ])^(1-x_d))
   bern_mu2 <- prod(mu[2,]^x_d * (1 - mu[2, ])^(1-x_d))
   bern_mu3 <- prod(mu[3,]^x_d * (1 - mu[3, ])^(1-x_d))
   
-  # probability that the observation belongs to each distribution
+  # Probabilities that the observation belongs to each distribution
   prob_1 <- pi[1] * bern_mu1 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
   prob_2 <- pi[2] * bern_mu2 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
   prob_3 <- pi[3] * bern_mu3 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
   
-  # probability that observation 1 comes from each distribution
+  # Probability that observation "iter" comes from each distribution
   w[iter, ] <- c(prob_1, prob_2, prob_3) 
 }
 
 # Calculate new pi
 pi <- 1/1000 * colSums(w)
 
+# Calculates new mu
+mu[1,] <- 1/sum(w[,1]) * colSums(w[,1] * x)
+mu[2,] <- 1/sum(w[,2]) * colSums(w[,2] * x)
+mu[3,] <- 1/sum(w[,3]) * colSums(w[,3] * x)
 
-
-
-1/sum(colSums(w))* sum(a*x)
-
-
-
-
-
-for(it in 1:max_it) {
-  plot(mu[1,], type="o", col="blue", ylim=c(0,1))
-  points(mu[2,], type="o", col="red")
-  points(mu[3,], type="o", col="green")
-  #points(mu[4,], type="o", col="yellow")
-  Sys.sleep(0.5)
-  # E-step: Computation of the  
-  # Your code here
-  #Log likelihood computation.
-  # Your code here
-  cat("iteration: ", it, "log likelihood: ", llik[it], "\n")
-  flush.console()
-  # Stop if the lok likelihood has not changed significantly
-  # Your code here
-  #M-step: ML parameter estimation from the data and weights
-  # Your code here
-}
-pi
-mu
-plot(llik[1:it], type="o")
+# Calculates log-likelihood
+llik[1] <- sum(log(w))
