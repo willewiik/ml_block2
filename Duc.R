@@ -178,6 +178,7 @@ pi <- vector(length = M) # mixing coefficients
 mu <- matrix(nrow=M, ncol=D) # conditional distributions
 llik <- vector(length = max_it) # log likelihood of the EM iterations
 
+
 # Random initialization of the parameters
 pi <- runif(M,0.49,0.51)
 pi <- pi / sum(pi)
@@ -186,6 +187,50 @@ for(m in 1:M) {
 }
 pi
 mu
+
+mu
+x[1, ]
+  
+x_d <- x[1,]
+x_d
+mu[1, ]
+
+mu[1,]^x_d * (1 - mu[1, ])^(1-x_d)
+
+bern_mu1 <- prod(mu[1,]^x_d * (1 - mu[1, ])^(1-x_d))
+
+
+bern_mu2 <- prod(mu[2,]^x_d * (1 - mu[2, ])^(1-x_d))
+bern_mu3 <- prod(mu[3,]^x_d * (1 - mu[3, ])^(1-x_d))
+
+
+# Calculates the weights for each observation
+for(iter in 1:1000){
+  x_d <- x[iter, ]
+  
+  # bernolli for (x1 given mu_1), (x1 given mu_2), (x1 given mu_3)
+  bern_mu1 <- prod(mu[1,]^x_d * (1 - mu[1, ])^(1-x_d))
+  bern_mu2 <- prod(mu[2,]^x_d * (1 - mu[2, ])^(1-x_d))
+  bern_mu3 <- prod(mu[3,]^x_d * (1 - mu[3, ])^(1-x_d))
+  
+  # probability that the observation belongs to each distribution
+  prob_1 <- pi[1] * bern_mu1 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+  prob_2 <- pi[2] * bern_mu2 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+  prob_3 <- pi[3] * bern_mu3 / sum(pi[1]*bern_mu1 + pi[2]*bern_mu2 + pi[3]*bern_mu3)
+  
+  # probability that observation 1 comes from each distribution
+  w[iter, ] <- c(prob_1, prob_2, prob_3) 
+}
+
+# Calculate new pi
+pi <- 1/1000 * colSums(w)
+
+
+
+
+1/sum(colSums(w))* sum(a*x)
+
+
 
 
 
